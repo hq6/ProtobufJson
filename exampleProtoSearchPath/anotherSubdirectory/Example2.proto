@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+import "anotherSubdirectory/Example3.proto";
+
+message Example2 {
+  Example3 message = 1;
+}

@@ -1,5 +1,6 @@
 CXXFLAGS ?= -I/usr/local/include
 LDFLAGS ?= -L/usr/local/lib
+# To statically link, run `make` with `LDLIBS=/full/path/to/libprotobuf.a make`
 LDLIBS ?= -lprotobuf
 
 ProtobufJson: ProtobufJson.cc
