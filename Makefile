@@ -1,10 +1,27 @@
-CXXFLAGS ?= -I/usr/local/include
-LDFLAGS ?= -L/usr/local/lib
-# To statically link, run `make` with `LDLIBS=/full/path/to/libprotobuf.a make`
-LDLIBS ?= -lprotobuf
+UNAME_S := $(shell uname -s)
 
-ProtobufJson: ProtobufJson.cc
-	g++ -std=c++11 -g -o ProtobufJson ProtobufJson.cc $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+CXXFLAGS ?= -Ilib/protobuf-3.21.2/dist/include
+LDLIBS ?= lib/protobuf-3.21.2/dist/lib/libprotobuf.a
+
+ifeq ($(UNAME_S),Linux)
+	LDLIBS += -lstdc++fs -pthread
+endif
+
+all: ProtoToJson JsonToProto
+
+JsonToProto: ProtoToJson
+	ln -f "$<" "$@"
+
+ProtoToJson: ProtobufJson.cc  lib/.compile
+	g++ -std=c++17 -g -o "$@" ProtobufJson.cc $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+
+lib/.compile:
+	rm -rf lib
+	./build_dependencies.sh
+	touch $@
 
 clean:
-	rm -f ProtobufJson
+	rm -f JsonToProto ProtoToJson
+
+distclean: clean
+	rm -rf lib

@@ -1,3 +1,9 @@
+lib
 ProtobufJson
+JsonToProto
+ProtoToJson
+ProtobufJson.dSYM/
 Output.bin
 .vscode/
+*.swp
+*.swo

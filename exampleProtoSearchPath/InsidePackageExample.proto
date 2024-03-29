@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package protobufjson.example;
+
 message Example {
   int32 x = 1;
   string text = 2;

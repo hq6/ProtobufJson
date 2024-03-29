@@ -4,64 +4,76 @@ This CLI tool is a thin wrapper over the Protobuf C++ API for converting back
 and forth between JSON and Protobuf.
 
 It is intended to be used as part of scripts that talk to services that speak
-proto-over-http.
-
-Once the dependency is installed this project can be built with an invocation
-of `make` on either OSX or Linux.
+proto-over-http, but it can also be used in isolation for decoding protobuf
+messages, if you prefer JSON over the protobuf text format.
 
 ## Example usage
 
 Here's an invocation to convert JSON to protobuf.
 
 ```bash
-./ProtobufJson ToProto Example.proto Example '{"x": 5, "text": "Hello World"}' > Output.bin
+./JsonToProto -I exampleProtoSearchPath Example '{"x": 5, "text": "Hello World"}' > Output.bin
 ```
 
 Here's an invocation to convert protobuf to JSON.
 
 ```bash
-./ProtobufJson  ToJson Example.proto Example < Output.bin
+./ProtoToJson -I exampleProtoSearchPath Example < Output.bin
 ```
-
-Note that the reference to the `.proto` file must be provided relative to the proto search paths specified with `--proto_path` (by default, the proto search path is the current directory). Attempts to reference a `.proto` file by a full path (such as `${HOME}/path/to/example.proto`) will fail. Instead, specify `--proto_path=${HOME}/path/to` and then specify `example.proto`, or specify `--proto_path=${HOME}/path` and then specify `to/example.proto`.
-
-For example, from within this project directory, run:
-
-```bash
-./ProtobufJson ToProto \
-  --proto_path=exampleProtoSearchPath \
-  anotherSubdirectory/Example2.proto \
-  Example2 \
-  '{"message":{"y": 5, "name": "Hello ProtobufJson"}}' \
-  > Output.bin
-```
-
-The directory `exampleProtoSearchPath` will be used for locating `.proto` files, including `Example2.proto`. Then, when `Example2.proto` imports `anotherSubdirectory/Example3.proto` `ProtobufJson` will search for that path within all specified `--proto_path` directories.
 
 A full "round trip" looks like:
 
 ```bash
-./ProtobufJson ToProto \
+./JsonToProto \
   --proto_path=exampleProtoSearchPath \
-  anotherSubdirectory/Example2.proto \
-  Example2 \
-  '{"message":{"y": 5, "name": "Hello ProtobufJson"}}' | \
-  ./ProtobufJson ToJson \
-    --proto_path=exampleProtoSearchPath \
-    anotherSubdirectory/Example2.proto \
-    Example2
+  Example \
+  '{"x": 5, "text": "Hello World"}' | \
+  ./ProtoToJson \
+  --proto_path=exampleProtoSearchPath \
+  Example
 ```
 
 producing output:
 
 ```json
 {
-  "message": {
-    "y": 5,
-    "name": "Hello ProtobufJson"
-  }
+ "x": 5,
+ "text": "Hello World"
 }
+
 ```
+
+## Proto imports are resolved relative to proto_path
+
+In the following example, Example2.proto imports
+`anotherSubdirectory/Example3.proto`, and both protos are resolved resolved relative to
+the import path `exampleProtoSearchPath`, rather than relative to the path of Example2.proto.
+
+```bash
+./JsonToProto \
+  --proto_path=exampleProtoSearchPath \
+  -P anotherSubdirectory/Example2.proto \
+  Example2 \
+  '{"message":{"y": 5, "name": "Hello ProtobufJson"}}' > Output.bin
+
+
+## Optimized usage
+
+As an optimization for larger collections of protos, one can reduce search time
+by explicitly specifying the proto file that defines the relevant proto.
+
+```bash
+./JsonToProto -I exampleProtoSearchPath -P example.proto Example '{"x": 5, "text": "Hello World"}' > Output.bin
+./ProtoToJson -I exampleProtoSearchPath -P example.proto Example < Output.bin
+```
+
+Note that the reference to the `.proto` file must be provided relative to the
+proto search paths specified with `--proto_path`. Attempts to reference a
+`.proto` file by a full path (such as `${HOME}/path/to/example.proto`) will
+fail.
+
+If you specify -I without -P, the tool will print a hint to stderr with the
+correct relative path.
 
 ## Dependencies
 
