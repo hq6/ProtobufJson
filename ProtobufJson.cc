@@ -58,7 +58,7 @@ struct Options {
   std::vector<const char*> descriptorSets;
 
   /**
-   * The name of the prototype message we wish to convert to or from json.
+   * The name of the protobuf message we wish to convert to or from json.
    */
   const char* messageName;
 
@@ -73,9 +73,9 @@ struct Options {
 /**
  * Print usage to stderr and exit.
  */
-static void usage(const char* progName) {
+static void usage(const char* progName, bool isHelp = 0) {
   fprintf(stderr,
-       "Usage: %s [--proto_path=PATH...] [--verbose] <message_name | method_name> [data] \n"
+       "Usage: %s [--proto_path=PATH...] [--verbose] <message_name> [data] \n"
        "\n"
        "  There are two names for this tool:\n"
        "    JsonToProto will assume the input is JSON and write binary protobuf to stdout.\n"
@@ -86,7 +86,7 @@ static void usage(const char* progName) {
        "                                imports.  May be specified multiple times;\n"
        "                                directories will be searched in order.  If not\n"
        "                                given, the current working directory is used.\n"
-       "    -P file, --proto_file=PATH  Specify the path of the file defining the prototype \n"
+       "    -P file, --proto_file=PATH  Specify the path of the file defining the protobuf \n"
        "                                message we wish to convert to or from json, relative to\n"
        "                                any of the proto_path options. This is an optimization.\n"
        "                                This option is only consumed when `--proto_path` is given.\n"
@@ -94,14 +94,18 @@ static void usage(const char* progName) {
        "                                `protoc` with `--descriptor_set_out`. This option is\n"
        "                                ignored if `--proto_path` is given.\n"
        "    --verbose                   When given, debug output will be printed to stderr.\n"
-       "    message_name                The name of the prototype message we wish to convert to or from json.\n"
+       "    message_name                The name of the protobuf message we wish to convert to or from json.\n"
        "    data                        If not provided as an argument, input is read from stdin.\n"
        "                                If provided, it is interpreted as a filename if it is prefixed\n"
        "                                with the `@` symbol, and otherwise as literal data.\n"
        "                                For json to proto, literal data is interpreted as JSON.\n"
        "                                For proto to json, literal data is interpreted as base64\n"
-       "                                encoded protobuf.\n",
+       "                                encoded protobuf.\n"
+       "    --help                      Show this message.\n",
       progName);
+  if (isHelp) {
+    exit(0);
+  }
   exit(1);
 }
 
@@ -140,7 +144,7 @@ Options parseArguments(int argc, char** argv) {
     options.toJson = true;
   } else {
     fprintf(stderr, "Please invoke this binary as JsonToProto or ProtoToJson.\n");
-    usage(argv[0]);
+    usage(oldArgv[0]);
   }
 
   static struct option long_options[] =
@@ -150,12 +154,13 @@ Options parseArguments(int argc, char** argv) {
       {"proto_path", required_argument, 0, 'I'},
       {"proto_file", required_argument, 0, 'P'},
       {"descriptor_set", required_argument, 0, 'D'},
+      {"help", no_argument, NULL, 'h'},
       {0, 0, 0, 0}
     };
   while (1) {
     int option_index = 0;
     int c;
-    c = getopt_long(argc, argv, "I:P:D:", long_options, &option_index);
+    c = getopt_long(argc, argv, "hI:P:D:", long_options, &option_index);
     if (c == -1) {
       break;
     }
@@ -175,8 +180,10 @@ Options parseArguments(int argc, char** argv) {
       case '?':
         /* getopt_long already printed an error message. */
         break;
+      case 'h':
+        usage(oldArgv[0], 1);
       default:
-        usage(argv[0]);
+        usage(oldArgv[0]);
     }
   }
   argc -= optind;
@@ -191,7 +198,7 @@ Options parseArguments(int argc, char** argv) {
   // Parse mandatory arguments and optional positional argument.
   if (argc < 1) {
     fprintf(stderr, "Missing mandatory positional arguments.\n");
-    usage(argv[0]);
+    usage(oldArgv[0]);
   }
 
   options.messageName = argv[0];
