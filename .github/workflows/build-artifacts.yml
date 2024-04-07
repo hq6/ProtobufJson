@@ -1,14 +1,6 @@
 name: Build Artifacts
 
-on:
-  workflow_dispatch:
-    # This input is needed in order to build commits that existed before this
-    # workflow was added.
-    inputs:
-      target_commit:
-        description: 'The commit to build.'
-        required: true
-        type: string
+on: [workflow_dispatch]
 
 jobs:
   build-linux-artifact:
@@ -16,8 +8,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.target_commit }}
     - name: make
       run: make
     # This step does a stupid double-wrapping but is necessary because
@@ -27,7 +17,7 @@ jobs:
       run: tar cvfz protobufjson-linux.tar.gz JsonToProto  ProtoToJson
     - uses: actions/upload-artifact@v4
       with:
-        name: protobufjson-linux-${{ inputs.target_commit }}.tar.gz
+        name: protobufjson-linux-${{ github.sha }}.tar.gz
         path: protobufjson-linux.tar.gz
         if-no-files-found: error
         compression-level: 0
@@ -37,8 +27,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.target_commit }}
     - name: make
       run: make
     # This step does a stupid double-wrapping but is necessary because
@@ -48,7 +36,7 @@ jobs:
       run: tar cvfz protobufjson-macos-intel.tar.gz JsonToProto  ProtoToJson
     - uses: actions/upload-artifact@v4
       with:
-        name: protobufjson-macos-intel-${{ inputs.target_commit }}.tar.gz
+        name: protobufjson-macos-intel-${{ github.sha }}.tar.gz
         path: protobufjson-macos-intel.tar.gz
         if-no-files-found: error
         compression-level: 0
@@ -58,8 +46,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.target_commit }}
     - name: make
       run: make
     # This step does a stupid double-wrapping but is necessary because
@@ -69,7 +55,7 @@ jobs:
       run: tar cvfz protobufjson-macos-arm.tar.gz JsonToProto  ProtoToJson
     - uses: actions/upload-artifact@v4
       with:
-        name: protobufjson-macos-arm-${{ inputs.target_commit }}.tar.gz
+        name: protobufjson-macos-arm-${{ github.sha }}.tar.gz
         path: protobufjson-macos-arm.tar.gz
         if-no-files-found: error
         compression-level: 0
