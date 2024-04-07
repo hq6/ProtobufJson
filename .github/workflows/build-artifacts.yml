@@ -1,0 +1,28 @@
+name: Build Artifacts
+
+on: [push]
+
+jobs:
+  build-linux-artifact:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: make
+      run: make
+
+  build-osx-intel-artifact:
+    runs-on: macos-latest-large
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: make
+      run: make
+
+  build-osx-arm-artifact:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: make
+      run: make
