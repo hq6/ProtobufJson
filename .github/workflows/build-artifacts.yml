@@ -10,13 +10,17 @@ jobs:
     - uses: actions/checkout@v4
     - name: make
       run: make
+    # This step does a stupid double-wrapping but is necessary because
+    # upload-artifact uses a zip command (which cannot be disabled) that
+    # removes executable bits.
+    - name: package
+      run: tar cvfz protobufjson-linux.tar.gz JsonToProto  ProtoToJson
     - uses: actions/upload-artifact@v4
       with:
         name: protobufjson-linux-${{ github.sha }}.tar.gz
-        path: |
-          JsonToProto
-          ProtoToJson
+        path: protobufjson-linux.tar.gz
         if-no-files-found: error
+        compression-level: 0
 
   build-osx-intel-artifact:
     runs-on: macos-13
@@ -25,13 +29,17 @@ jobs:
     - uses: actions/checkout@v4
     - name: make
       run: make
+    # This step does a stupid double-wrapping but is necessary because
+    # upload-artifact uses a zip command (which cannot be disabled) that
+    # removes executable bits.
+    - name: package
+      run: tar cvfz protobufjson-macos-intel.tar.gz JsonToProto  ProtoToJson
     - uses: actions/upload-artifact@v4
       with:
         name: protobufjson-macos-intel-${{ github.sha }}.tar.gz
-        path: |
-          JsonToProto
-          ProtoToJson
+        path: protobufjson-macos-intel.tar.gz
         if-no-files-found: error
+        compression-level: 0
 
   build-osx-arm-artifact:
     runs-on: macos-latest
@@ -40,10 +48,14 @@ jobs:
     - uses: actions/checkout@v4
     - name: make
       run: make
+    # This step does a stupid double-wrapping but is necessary because
+    # upload-artifact uses a zip command (which cannot be disabled) that
+    # removes executable bits.
+    - name: package
+      run: tar cvfz protobufjson-macos-arm.tar.gz JsonToProto  ProtoToJson
     - uses: actions/upload-artifact@v4
       with:
         name: protobufjson-macos-arm-${{ github.sha }}.tar.gz
-        path: |
-          JsonToProto
-          ProtoToJson
+        path: protobufjson-macos-arm.tar.gz
         if-no-files-found: error
+        compression-level: 0
