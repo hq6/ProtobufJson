@@ -25,6 +25,13 @@ jobs:
     - uses: actions/checkout@v4
     - name: make
       run: make
+    - uses: actions/upload-artifact@v4
+      with:
+        name: protobufjson-macos-intel-${{ github.sha }}.tar.gz
+        path: |
+          JsonToProto
+          ProtoToJson
+        if-no-files-found: error
 
   build-osx-arm-artifact:
     runs-on: macos-latest
@@ -33,3 +40,10 @@ jobs:
     - uses: actions/checkout@v4
     - name: make
       run: make
+    - uses: actions/upload-artifact@v4
+      with:
+        name: protobufjson-macos-arm-${{ github.sha }}.tar.gz
+        path: |
+          JsonToProto
+          ProtoToJson
+        if-no-files-found: error
