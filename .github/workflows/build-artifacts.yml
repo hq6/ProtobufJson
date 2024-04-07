@@ -4,12 +4,19 @@ on: [push]
 
 jobs:
   build-linux-artifact:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v4
     - name: make
       run: make
+    - uses: actions/upload-artifact@v4
+      with:
+        name: protobufjson-linux-${{ github.sha }}.tar.gz
+        path: |
+          JsonToProto
+          ProtoToJson
+        if-no-files-found: error
 
   build-osx-intel-artifact:
     runs-on: macos-13
