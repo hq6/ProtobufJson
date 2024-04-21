@@ -7,6 +7,18 @@ It is intended to be used as part of scripts that talk to services that speak
 proto-over-http, but it can also be used in isolation for decoding protobuf
 messages, if you prefer JSON over the protobuf text format.
 
+## Installation
+
+This tool can be installed by downloading the latest
+[release](https://github.com/hq6/ProtobufJson/releases) and unzipping it into your PATH,
+or building from source. It runs on MacOS and Linux.
+
+```
+git clone https://github.com/hq6/ProtobufJson.git
+cd ProtobufJson
+make
+```
+
 ## Example usage
 
 Here's an invocation to convert JSON to protobuf.
