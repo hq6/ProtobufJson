@@ -445,74 +445,83 @@ int main(int argc, char** argv){
     return 1;
   }
 
-   // Construct a message from the given descriptor. This name must exclude the
-   // package.
-   const Descriptor* messageDescriptor = messageDescriptors[matches[0]];
-   if (options.verbose) {
-     std::cerr << messageDescriptor->DebugString() << std::endl;
-   }
-   DynamicMessageFactory dynamicMessageFactory;
-   Message* message = dynamicMessageFactory.GetPrototype(messageDescriptor)->New();
+  // Construct a message from the given descriptor. This name must exclude the
+  // package.
+  const Descriptor* messageDescriptor = messageDescriptors[matches[0]];
+  if (options.verbose) {
+    std::cerr << messageDescriptor->DebugString() << std::endl;
+  }
+  DynamicMessageFactory dynamicMessageFactory;
+  Message* message = dynamicMessageFactory.GetPrototype(messageDescriptor)->New();
 
   Status conversionStatus;
-   if (options.toJson) {
-     // Converting protobuf to JSON
-     if (options.data) {
-       if (options.data[0] == '@') {
-         // Read binary from file
-         FILE* protoFile = fopen(options.data + 1, "rb");
-         message->ParseFromFileDescriptor(fileno(protoFile));
-         fclose(protoFile);
-       } else {
-         // Interpret as base64 encoded binary protobuf.
-         std::string binaryProto;
-         Base64Unescape(options.data, &binaryProto);
-         message->ParseFromString(binaryProto);
-       }
-     } else {
-       // Read binary from stdin.
-       message->ParseFromIstream(&std::cin);
-     }
-     std::string jsonOutput;
-     JsonPrintOptions printOptions;
-     printOptions.preserve_proto_field_names = true;
-     printOptions.always_print_primitive_fields = false;
-     printOptions.add_whitespace = true;
-     printOptions.always_print_enums_as_ints = false;
-     conversionStatus = MessageToJsonString(*message, &jsonOutput, printOptions);
-     if (!conversionStatus.ok()) {
-       std::cout << conversionStatus << std::endl;
-       exit(1);
-     }
-     std::cout << jsonOutput << std::endl;
-   } else {
-     //  Converting JSON to protobuf
-     if (options.data) {
-       if (options.data[0] == '@') {
-         // Read JSON from file
-         std::ifstream jsonFile(options.data + 1);
-         std::stringstream buffer;
-         buffer << jsonFile.rdbuf();
-         conversionStatus = JsonStringToMessage(buffer.str(), message);
-       } else {
-         // Interpret as JSON Text
-         conversionStatus = JsonStringToMessage(options.data, message);
-       }
-     } else {
-       // Read JSON from stdin.
-       std::stringstream buffer;
-       buffer << std::cin.rdbuf();
-       conversionStatus = JsonStringToMessage(buffer.str(), message);
-     }
-     if (!conversionStatus.ok()) {
-       std::cout << conversionStatus << std::endl;
-       exit(1);
-     }
-     message->SerializeToOstream(&std::cout);
-   }
-   // Give a hint about a different command that would run faster next time.
-   if (options.protoFiles.empty() && !options.protoPaths.empty()) {
-     fprintf(stderr, "For faster conversion of this message, add \e[1m-P %s\e[m to the command invocation.\n",
-        messageDescriptor->file()->name().c_str());
-   }
+  if (options.toJson) {
+    bool parseSuccessful;
+    // Converting protobuf to JSON
+    if (options.data) {
+      if (options.data[0] == '@') {
+        // Read binary from file
+        FILE* protoFile = fopen(options.data + 1, "rb");
+        parseSuccessful = message->ParseFromFileDescriptor(fileno(protoFile));
+        fclose(protoFile);
+      } else {
+        // Interpret as base64 encoded binary protobuf.
+        std::string binaryProto;
+        if (!Base64Unescape(options.data, &binaryProto)) {
+          std::cout << "Failed to decode base64." << std::endl;
+          exit(1);
+        }
+        parseSuccessful = message->ParseFromString(binaryProto);
+      }
+    } else {
+      // Read binary from stdin.
+      parseSuccessful = message->ParseFromIstream(&std::cin);
+    }
+    if (!parseSuccessful) {
+      std::cout << "Failed to parse protobuf message." << std::endl;
+      exit(1);
+    }
+
+    std::string jsonOutput;
+    JsonPrintOptions printOptions;
+    printOptions.preserve_proto_field_names = true;
+    printOptions.always_print_primitive_fields = false;
+    printOptions.add_whitespace = true;
+    printOptions.always_print_enums_as_ints = false;
+    conversionStatus = MessageToJsonString(*message, &jsonOutput, printOptions);
+    if (!conversionStatus.ok()) {
+      std::cout << conversionStatus << std::endl;
+      exit(1);
+    }
+    std::cout << jsonOutput << std::endl;
+  } else {
+    //  Converting JSON to protobuf
+    if (options.data) {
+      if (options.data[0] == '@') {
+        // Read JSON from file
+        std::ifstream jsonFile(options.data + 1);
+        std::stringstream buffer;
+        buffer << jsonFile.rdbuf();
+        conversionStatus = JsonStringToMessage(buffer.str(), message);
+      } else {
+        // Interpret as JSON Text
+        conversionStatus = JsonStringToMessage(options.data, message);
+      }
+    } else {
+      // Read JSON from stdin.
+      std::stringstream buffer;
+      buffer << std::cin.rdbuf();
+      conversionStatus = JsonStringToMessage(buffer.str(), message);
+    }
+    if (!conversionStatus.ok()) {
+      std::cout << conversionStatus << std::endl;
+      exit(1);
+    }
+    message->SerializeToOstream(&std::cout);
+  }
+  // Give a hint about a different command that would run faster next time.
+  if (options.protoFiles.empty() && !options.protoPaths.empty()) {
+    fprintf(stderr, "For faster conversion of this message, add \e[1m-P %s\e[m to the command invocation.\n",
+       messageDescriptor->file()->name().c_str());
+  }
 }
